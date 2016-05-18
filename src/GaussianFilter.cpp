@@ -32,9 +32,6 @@ void GaussianFilter::create_vao() {
 
     glViewport(0, 0, (GLint) width, (GLint) heigth);
 
-    glBindFramebuffer(GL_FRAMEBUFFER, obj_tex.id_fbo);
-    glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT);
-
     // VBO
     glGenBuffers(1, &obj_tex.id_vbo);
     glBindBuffer(GL_ARRAY_BUFFER, obj_tex.id_vbo);
@@ -49,34 +46,6 @@ void GaussianFilter::create_vao() {
     glEnableVertexAttribArray(0);
     glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 0, (GLubyte *) NULL);
 
-
-    GLuint tex_pos_handler;
-    glGenBuffers(1, &tex_pos_handler);
-    GLfloat tex_pos[] = {
-            // pos
-            0.0f, 0.0f,
-            1.0f, 1.0f,
-            1.0f, 0.0f,
-            0.0f, 0.0f,
-            0.0f, 1.0f,
-            1.0f, 1.0f
-    };
-    glBindBuffer(GL_ARRAY_BUFFER, tex_pos_handler);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(GLfloat) * 6 * 2, tex_pos, GL_STATIC_DRAW);
-
-    glEnableVertexAttribArray(1);  // Vertex position
-    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 0, (GLubyte *) NULL);
-
-
-    glGenTextures(1, &obj_tex.id_tex);
-    glBindTexture(GL_TEXTURE_2D, obj_tex.id_tex);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB8, obj_tex.width, obj_tex.heigth, 0, GL_BGR, GL_UNSIGNED_BYTE, NULL);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-
-    /*
     // FBO
     glGenFramebuffers(1, &obj_tex.id_fbo);
     glBindFramebuffer(GL_FRAMEBUFFER, obj_tex.id_fbo);
@@ -86,13 +55,6 @@ void GaussianFilter::create_vao() {
     glBindRenderbuffer(GL_RENDERBUFFER, obj_tex.id_rbo_c);
     glRenderbufferStorage(GL_RENDERBUFFER, GL_RGB8, width, heigth);
     glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_RENDERBUFFER, obj_tex.id_rbo_c);
-
-    // RBO depth
-    glGenRenderbuffers(1, &obj_tex.id_rbo_d);
-    glBindRenderbuffer(GL_RENDERBUFFER, obj_tex.id_rbo_d);
-    glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT16, width, heigth);
-    glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, obj_tex.id_rbo_d);
-
 
     if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
         std::cerr << "Error in Framebuffer RBO" << std::endl;
@@ -108,40 +70,23 @@ void GaussianFilter::create_vao() {
     glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, obj_tex.id_tex, 0);
     //glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, obj_tex.id_tex, 0);
 
-
     if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
         std::cerr << "Error in Framebuffer TEX" << std::endl;
 
-    */
-
-    // Uniforms
-    float resolution[2] = {640, 480};
-    glUniform2fv(texture_program.uniform("resolution"), 1, resolution);
-    float direction[2] = {1, 0};
-    glUniform2fv(texture_program.uniform("direction"), 1, direction);
-
-
 }
 
 
 void GaussianFilter::blur(unsigned char *image_src, unsigned char *image_dest) {
-    glClearColor(0.7, 0.7, 0.7f, 1);
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-    glBindTexture(GL_TEXTURE_2D, obj_tex.id_tex);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB8, obj_tex.width, obj_tex.heigth, 0, GL_BGR, GL_UNSIGNED_BYTE, image_src);
-    glDrawArrays(GL_TRIANGLES, 0, 6);
-}
-
-/*
-void GaussianFilter::blur(unsigned char *image_src, unsigned char *image_dest) {
+    glBindVertexArray(obj_tex.id_vao);
     glBindFramebuffer(GL_FRAMEBUFFER, obj_tex.id_fbo);
+    glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT);
     glBindRenderbuffer(GL_RENDERBUFFER, obj_tex.id_rbo_c);
     glBindTexture(GL_TEXTURE_2D, obj_tex.id_tex);
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB8, obj_tex.width, obj_tex.heigth, 0, GL_BGR, GL_UNSIGNED_BYTE, image_src);
+    glUniform1i(texture_program.uniform("mode_direction"), 0);
+    glDrawArrays(GL_TRIANGLES, 0, 6);
+    glUniform1i(texture_program.uniform("mode_direction"), 1);
     glDrawArrays(GL_TRIANGLES, 0, 6);
     glReadBuffer(GL_COLOR_ATTACHMENT0);
-    glReadPixels(0, 0, width, heigth, GL_RGB8, GL_UNSIGNED_BYTE, image_dest);
-    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    glReadPixels(0, 0, width, heigth, GL_BGR, GL_UNSIGNED_BYTE, image_dest);
 }
- */
