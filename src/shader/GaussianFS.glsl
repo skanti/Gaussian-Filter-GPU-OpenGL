@@ -1,5 +1,8 @@
 #version 410 core
 
+
+in vec2 tex_pos;
+
 uniform vec2 resolution;
 uniform sampler2D tex;
 uniform vec2 direction;
@@ -21,8 +24,8 @@ vec4 blur9(vec2 uv) {
 void main() {
 	vec2 uv = vec2(gl_FragCoord.xy / resolution.xy);
 	vec4 a = blur9(uv);
-	frag_color = vec4(1.0,0,0,1.0);
-	//frag_color = a;
+	//frag_color = vec4(1.0,0,0,1.0);
+	frag_color = texture(tex,tex_pos);
 }
 
 

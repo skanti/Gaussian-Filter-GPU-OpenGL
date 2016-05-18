@@ -8,7 +8,7 @@
 GaussianFilter::GaussianFilter(int width_, int height_, int n_channel_, float sigma_)
         : width(width_), heigth(height_), n_channel(n_channel_), n_pixel(width * heigth), n_total(n_pixel * n_channel),
           buffer(n_total), sigma(sigma_),
-          obj_tex(ObjectTex{0, 0, 0, 0, 0, width, heigth, n_channel}) {
+          obj_tex(ObjectTex{0, 0, 0, 0, 0, 0, width, heigth, n_channel}) {
 
 
     load_shader();
@@ -27,6 +27,9 @@ void GaussianFilter::load_shader() {
 void GaussianFilter::create_vao() {
     glUseProgram(texture_program.get_id());
 
+    glGenVertexArrays(1, &obj_tex.id_vao);
+    glBindVertexArray(obj_tex.id_vao);
+
     glViewport(0, 0, (GLint) width, (GLint) heigth);
 
     glBindFramebuffer(GL_FRAMEBUFFER, obj_tex.id_fbo);
@@ -35,17 +38,18 @@ void GaussianFilter::create_vao() {
     // VBO
     glGenBuffers(1, &obj_tex.id_vbo);
     glBindBuffer(GL_ARRAY_BUFFER, obj_tex.id_vbo);
-    GLfloat quad[] = {1.f, 1.f,
+
+    GLfloat quad[] = {-1.f, 1.f,
+                      1.f, -1.f,
+                      1.f, 1.f,
                       -1.f, 1.f,
                       -1.f, -1.f,
-                      -1.f, -1.f,
-                      1.f, -1.f,
-                      1.f, 1.f};
+                      1.f, -1.f};
     glBufferData(GL_ARRAY_BUFFER, sizeof(GLfloat) * 2 * 6, quad, GL_STATIC_DRAW);
     glEnableVertexAttribArray(0);
     glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 0, (GLubyte *) NULL);
 
-    /*
+
     GLuint tex_pos_handler;
     glGenBuffers(1, &tex_pos_handler);
     GLfloat tex_pos[] = {
@@ -62,8 +66,17 @@ void GaussianFilter::create_vao() {
 
     glEnableVertexAttribArray(1);  // Vertex position
     glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 0, (GLubyte *) NULL);
-    */
 
+
+    glGenTextures(1, &obj_tex.id_tex);
+    glBindTexture(GL_TEXTURE_2D, obj_tex.id_tex);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB8, obj_tex.width, obj_tex.heigth, 0, GL_BGR, GL_UNSIGNED_BYTE, NULL);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+
+    /*
     // FBO
     glGenFramebuffers(1, &obj_tex.id_fbo);
     glBindFramebuffer(GL_FRAMEBUFFER, obj_tex.id_fbo);
@@ -99,6 +112,7 @@ void GaussianFilter::create_vao() {
     if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
         std::cerr << "Error in Framebuffer TEX" << std::endl;
 
+    */
 
     // Uniforms
     float resolution[2] = {640, 480};
@@ -111,6 +125,16 @@ void GaussianFilter::create_vao() {
 
 
 void GaussianFilter::blur(unsigned char *image_src, unsigned char *image_dest) {
+    glClearColor(0.7, 0.7, 0.7f, 1);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+    glBindTexture(GL_TEXTURE_2D, obj_tex.id_tex);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB8, obj_tex.width, obj_tex.heigth, 0, GL_BGR, GL_UNSIGNED_BYTE, image_src);
+    glDrawArrays(GL_TRIANGLES, 0, 6);
+}
+
+/*
+void GaussianFilter::blur(unsigned char *image_src, unsigned char *image_dest) {
     glBindFramebuffer(GL_FRAMEBUFFER, obj_tex.id_fbo);
     glBindRenderbuffer(GL_RENDERBUFFER, obj_tex.id_rbo_c);
     glBindTexture(GL_TEXTURE_2D, obj_tex.id_tex);
@@ -119,6 +143,5 @@ void GaussianFilter::blur(unsigned char *image_src, unsigned char *image_dest) {
     glReadBuffer(GL_COLOR_ATTACHMENT0);
     glReadPixels(0, 0, width, heigth, GL_RGB8, GL_UNSIGNED_BYTE, image_dest);
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
-
-
 }
+ */
