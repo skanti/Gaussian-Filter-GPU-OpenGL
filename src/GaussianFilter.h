@@ -11,7 +11,7 @@
 #include "GaussianBlur.h"
 
 struct ObjectTex {
-    GLuint id_vao, id_vbo, id_tex, id_fbo, id_rbo_c, id_rbo_d;
+    GLuint id_vao, id_vbo, id_tex1, id_tex2, id_fbo1, id_fbo2, id_rbo_c1, id_rbo_c2;
     GLsizei width, heigth, n_channel;
 };
 

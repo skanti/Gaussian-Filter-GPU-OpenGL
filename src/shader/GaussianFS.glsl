@@ -13,9 +13,9 @@ uniform int mode_direction;
 uniform sampler2D tex;
 out vec4 frag_color;
 
+
 vec4 blur9_h(vec2 uv) {
-  vec4 color = vec4(0.0);
-  color += texture(tex, uv) * 0.2270270270;
+  vec4 color = texture(tex, uv) * 0.2270270270;
   color += texture(tex, uv + offset1_h) * 0.3162162162;
   color += texture(tex, uv - offset1_h) * 0.3162162162;
   color += texture(tex, uv + offset2_h) * 0.0702702703;
@@ -24,8 +24,7 @@ vec4 blur9_h(vec2 uv) {
 }
 
 vec4 blur9_v(vec2 uv) {
-  vec4 color = vec4(0.0);
-  color += texture(tex, uv) * 0.2270270270;
+  vec4 color = texture(tex, uv) * 0.2270270270;
   color += texture(tex, uv + offset1_v) * 0.3162162162;
   color += texture(tex, uv - offset1_v) * 0.3162162162;
   color += texture(tex, uv + offset2_v) * 0.0702702703;
@@ -38,7 +37,5 @@ void main() {
 	if (mode_direction == 0)
 		frag_color = blur9_h(uv);
 	 else if (mode_direction == 1)
-    	frag_color = blur9_v(uv);
+		frag_color = blur9_v(uv);
 }
-
-
